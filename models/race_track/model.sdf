@@ -1,0 +1,39 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <model name="race_track">
+    <static>true</static>
+    <link name="link">
+      <collision name="collision">
+        <geometry>
+          <plane>
+            <normal>0 0 1</normal>
+            <size>20 4</size> <!-- Đường thẳng 20m dài x 4m rộng -->
+          </plane>
+        </geometry>
+        <surface>
+          <friction>
+            <ode>
+              <mu>1.2</mu>
+              <mu2>1.2</mu2>
+            </ode>
+          </friction>
+        </surface>
+      </collision>
+      <visual name="visual">
+        <geometry>
+          <plane>
+            <normal>0 0 1</normal>
+            <size>20 4</size>
+          </plane>
+        </geometry>
+        <material>
+          <script>
+            <uri>model://race_track/materials/scripts</uri>
+            <uri>model://race_track/materials/textures</uri>
+            <name>RaceTrack/Texture</name>
+          </script>
+        </material>
+      </visual>
+    </link>
+  </model>
+</sdf>

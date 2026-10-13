@@ -1,0 +1,342 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="ackermann_car">
+
+  <!-- ================= TÍNH TOÁN HÌNH HỌC (ĐÃ HIỆU CHUẨN) ================= -->
+  <xacro:property name="chassis_length" value="0.4"/>
+  <xacro:property name="chassis_width" value="0.2"/>
+  <xacro:property name="chassis_height" value="0.08"/>
+  <xacro:property name="wheel_radius" value="0.06"/>
+  <xacro:property name="wheel_width" value="0.04"/>
+  <xacro:property name="wheelbase" value="0.3"/>
+  <xacro:property name="track" value="0.26"/>
+
+  <!-- Gốc tọa độ ảo của Robot nằm sát mặt đất -->
+  <link name="base_link"/>
+
+  <!-- Thân xe (Chassis) - Nâng trọng tâm lên để tạo khoảng sáng gầm -->
+  <link name="chassis_link">
+    <visual>
+      <geometry><box size="${chassis_length} ${chassis_width} ${chassis_height}"/></geometry>
+      <material name="blue"><color rgba="0 0 0.8 1"/></material>
+    </visual>
+    <collision>
+      <geometry><box size="${chassis_length} ${chassis_width} ${chassis_height}"/></geometry>
+    </collision>
+    <inertial>
+      <mass value="10.0"/>
+      <inertia ixx="0.04" ixy="0.0" ixz="0.0" iyy="0.14" iyz="0.0" izz="0.16"/>
+    </inertial>
+  </link>
+
+  <!-- Đặt đáy thân xe cách mặt đất 0.05m (Khoảng sáng gầm) -->
+  <joint name="base_to_chassis" type="fixed">
+    <parent link="base_link"/>
+    <child link="chassis_link"/>
+    <origin xyz="0 0 ${chassis_height/2 + 0.05}" rpy="0 0 0"/>
+  </joint>
+
+  <!-- KHỚP NỐI (JOINT) - Gắn LiDAR vào chính giữa mặt trên thân xe -->
+  <joint name="laser_joint" type="fixed">
+    <parent link="chassis_link"/>
+    <child link="laser_frame"/>
+    <origin xyz="0 0 ${chassis_height / 2}" rpy="0 0 0"/>
+  </joint>
+
+  <link name="laser_frame">
+    <visual>
+      <geometry>
+        <cylinder radius="0.05" length="0.04"/>
+      </geometry>
+      <material name="black">
+        <color rgba="0 0 0 1"/>
+      </material>
+    </visual>
+    <collision>
+      <geometry>
+        <cylinder radius="0.05" length="0.04"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.1"/>
+      <inertia ixx="0.0001" ixy="0.0" ixz="0.0" iyy="0.0001" iyz="0.0" izz="0.0001"/>
+    </inertial>
+  </link>
+ <!-- Plugin camera -->
+  <joint name="camera_joint" type="fixed">
+    <parent link="chassis_link"/>
+    <child link="camera_link"/>
+    <origin xyz="${chassis_length/2} 0 0.1" rpy="0 0 0"/>
+  </joint>
+
+  <link name="camera_link">
+    <visual>
+      <geometry>
+        <box size="0.015 0.03 0.03"/>
+      </geometry>
+      <material name="red">
+        <color rgba="1 0 0 1"/>
+      </material>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="0.015 0.03 0.03"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.05"/>
+      <inertia ixx="0.00001" ixy="0" ixz="0" iyy="0.00001" iyz="0" izz="0.00001"/>
+    </inertial>
+  </link>
+
+  <!-- optical link -->
+  <joint name="camera_optical_joint" type="fixed">
+    <parent link="camera_link"/>
+    <child link="camera_link_optical"/>
+    <origin xyz="0.2 0 0.1" rpy="0 -0.261 0"/>
+  </joint>
+
+  <link name="camera_link_optical"></link>
+
+  <!-- ================= CẤU HÌNH VẬT LÝ IMU ================= -->
+  <joint name="imu_joint" type="fixed">
+    <parent link="chassis_link"/>
+    <child link="imu_link"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+
+  <link name="imu_link">
+    <visual>
+      <geometry>
+        <box size="0.01 0.01 0.01"/>
+      </geometry>
+      <material name="orange">
+        <color rgba="1.0 0.5 0.0 1"/>
+      </material>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="0.01 0.01 0.01"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.001"/>
+      <inertia ixx="0.000001" ixy="0" ixz="0" iyy="0.000001" iyz="0" izz="0.000001"/>
+    </inertial>
+  </link>
+  <!-- ================= CẦU SAU (VI SAI CHỦ ĐỘNG) ================= -->
+  <!-- Bánh sau TRÁI -->
+  <link name="left_rear_wheel">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry><cylinder radius="${wheel_radius}" length="${wheel_width}"/></geometry>
+      <material name="black"><color rgba="0 0 0 1"/></material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry><cylinder radius="${wheel_radius}" length="${wheel_width}"/></geometry>
+    </collision>
+    <inertial><mass value="0.3"/><inertia ixx="0.00031" ixy="0" ixz="0" iyy="0.00031" iyz="0" izz="0.00054"/></inertial>
+  </link>
+  <joint name="left_rear_wheel_joint" type="continuous">
+    <parent link="chassis_link"/>
+    <child link="left_rear_wheel"/>
+    <origin xyz="-${wheelbase/2} ${track/2} -0.03" rpy="-${pi/2} 0 0"/>
+    <axis xyz="0 0 1"/>
+  </joint>
+  <!-- Bánh sau PHẢI -->
+  <link name="right_rear_wheel">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry><cylinder radius="${wheel_radius}" length="${wheel_width}"/></geometry>
+      <material name="black"><color rgba="0 0 0 1"/></material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry><cylinder radius="${wheel_radius}" length="${wheel_width}"/></geometry>
+    </collision>
+    <inertial><mass value="0.3"/><inertia ixx="0.00031" ixy="0" ixz="0" iyy="0.00031" iyz="0" izz="0.00054"/></inertial>
+  </link>
+  <joint name="right_rear_wheel_joint" type="continuous">
+    <parent link="chassis_link"/>
+    <child link="right_rear_wheel"/>
+    <origin xyz="-${wheelbase/2} -${track/2} -0.03" rpy="-${pi/2} 0 0"/>
+    <axis xyz="0 0 1"/>
+  </joint>
+ <!-- ================= CẦU TRƯỚC (HỆ THỐNG LÁI ACKERMANN) ================= -->
+  <!-- HỆ THỐNG BÊN TRÁI -->
+  <link name="left_steering_knuckle">
+    <inertial><mass value="0.05"/><inertia ixx="0.00001" ixy="0" ixz="0" iyy="0.00001" iyz="0" izz="0.00001"/></inertial>
+  </link>
+  <joint name="left_steering_joint" type="revolute">
+    <parent link="chassis_link"/>
+    <child link="left_steering_knuckle"/>
+    <origin xyz="${wheelbase/2} ${track/2} -0.03" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="-0.55" upper="0.55" effort="50.0" velocity="10.0"/>
+    <dynamics damping="0.01" friction="0.01"/>
+  </joint>
+
+  <link name="left_front_wheel">
+    <visual><geometry><cylinder radius="${wheel_radius}" length="${wheel_width}"/></geometry><material name="black"><color rgba="0 0 0 1"/></material></visual>
+    <collision><geometry><cylinder radius="${wheel_radius}" length="${wheel_width}"/></geometry></collision>
+    <inertial><mass value="0.3"/><inertia ixx="0.00031" ixy="0" ixz="0" iyy="0.00031" iyz="0" izz="0.00054"/></inertial>
+  </link>
+  <joint name="left_front_wheel_joint" type="continuous">
+    <parent link="left_steering_knuckle"/>
+    <child link="left_front_wheel"/>
+    <origin xyz="0 0 0" rpy="-${pi/2} 0 0"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="20.0" velocity="50.0"/>
+    <dynamics damping="0.01" friction="0.01"/>
+  </joint>
+  <!-- HỆ THỐNG BÊN PHẢI  -->
+  <link name="right_steering_knuckle">
+    <inertial><mass value="0.05"/><inertia ixx="0.00001" ixy="0" ixz="0" iyy="0.00001" iyz="0" izz="0.00001"/></inertial>
+  </link>
+  <joint name="right_steering_joint" type="revolute">
+    <parent link="chassis_link"/>
+    <child link="right_steering_knuckle"/>
+    <origin xyz="${wheelbase/2} -${track/2} -0.03" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="-0.55" upper="0.55" effort="50.0" velocity="10.0"/>
+    <dynamics damping="0.01" friction="0.01"/>
+  </joint>
+
+  <link name="right_front_wheel">
+    <visual><geometry><cylinder radius="${wheel_radius}" length="${wheel_width}"/></geometry><material name="black"><color rgba="0 0 0 1"/></material></visual>
+    <collision><geometry><cylinder radius="${wheel_radius}" length="${wheel_width}"/></geometry></collision>
+    <inertial><mass value="0.3"/><inertia ixx="0.00031" ixy="0" ixz="0" iyy="0.00031" iyz="0" izz="0.00054"/></inertial>
+  </link>
+  <joint name="right_front_wheel_joint" type="continuous">
+    <parent link="right_steering_knuckle"/>
+    <child link="right_front_wheel"/>
+    <origin xyz="0 0 0" rpy="-${pi/2} 0 0"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="20.0" velocity="50.0"/>
+    <dynamics damping="0.01" friction="0.01"/>
+  </joint>
+
+  <!-- ĐỘ BÁM ĐƯỜNG CHO BÁNH XE TRONG GAZEBO -->
+  <!-- Ma sát mặt đường cho Bánh sau  (truyền lực) -->
+  <gazebo reference="left_rear_wheel">
+    <mu1>100.0</mu1>
+    <mu2>100.0</mu2>
+    <fdir1>1 0 0</fdir1>
+    <kp>1000000.0</kp>
+    <kd>10.0</kd>
+    <minDepth>0.001</minDepth>
+    <maxVel>0.01</maxVel>
+  </gazebo>
+  <gazebo reference="right_rear_wheel">
+    <mu1>100.0</mu1>
+    <mu2>100.0</mu2>
+    <fdir1>1 0 0</fdir1>
+    <kp>1000000.0</kp>
+    <kd>10.0</kd>
+    <minDepth>0.001</minDepth>
+    <maxVel>0.01</maxVel>
+  </gazebo>
+  <!-- Ma sát mặt đường cho Bánh trước (Bánh dẫn hướng) -->
+  <gazebo reference="left_front_wheel">
+    <mu1>100.0</mu1>
+    <mu2>100.0</mu2>
+    <fdir1>1 0 0</fdir1>
+    <kp>1000000.0</kp>
+    <kd>10.0</kd>
+    <minDepth>0.001</minDepth>
+    <maxVel>0.01</maxVel>
+  </gazebo>
+
+  <gazebo reference="right_front_wheel">
+    <mu1>100.0</mu1>
+    <mu2>100.0</mu2>
+    <fdir1>1 0 0</fdir1>
+    <kp>1000000.0</kp>
+    <kd>10.0</kd>
+    <minDepth>0.001</minDepth>
+    <maxVel>0.01</maxVel>
+  </gazebo>
+  <!-- CONFIG ROS2 CONTROL (ĐÃ HIỆU CHỈNH ĐỦ ĐẦU RA CHO 4 BÁNH VÀ 2 CỔ LÁI) -->
+  <ros2_control name="GazeboSystem" type="system">
+    <hardware><plugin>gazebo_ros2_control/GazeboSystem</plugin></hardware>
+    <joint name="left_rear_wheel_joint"><command_interface name="velocity"/><state_interface name="position"/><state_interface name="velocity"/></joint>
+    <joint name="right_rear_wheel_joint"><command_interface name="velocity"/><state_interface name="position"/><state_interface name="velocity"/></joint>
+    <joint name="left_front_wheel_joint"><command_interface name="velocity"/><state_interface name="position"/><state_interface name="velocity"/></joint>
+    <joint name="right_front_wheel_joint"><command_interface name="velocity"/><state_interface name="position"/><state_interface name="velocity"/></joint>
+    <joint name="left_steering_joint"><command_interface name="position"/><state_interface name="position"/><state_interface name="velocity"/></joint>
+    <joint name="right_steering_joint"><command_interface name="position"/><state_interface name="position"/><state_interface name="velocity"/></joint>
+  </ros2_control>
+  <!-- ================= PLUGIN LIDAR CHO GAZEBO ================= -->
+  <gazebo reference="laser_frame">
+    <material>Gazebo/Black</material>
+    <sensor name="laser" type="ray">
+      <pose>0 0 0 0 0 0</pose>
+      <visualize>true</visualize>
+      <update_rate>10</update_rate>
+      <ray>
+        <scan>
+          <horizontal>
+            <samples>360</samples>
+            <resolution>1</resolution>
+            <min_angle>-3.14159</min_angle>
+            <max_angle>3.14159</max_angle>
+          </horizontal>
+        </scan>
+        <range>
+          <min>0.3</min>
+          <max>12.0</max>
+          <resolution>0.01</resolution>
+        </range>
+      </ray>
+      <plugin name="laser_controller" filename="libgazebo_ros_ray_sensor.so">
+        <ros><argument>~/out:=scan</argument></ros>
+        <output_type>sensor_msgs/LaserScan</output_type>
+        <frame_name>laser_frame</frame_name>
+      </plugin>
+    </sensor>
+  </gazebo>
+  <!-- ================= PLUGIN CONTROL TỔNG CHO GAZEBO ================= -->
+  <gazebo>
+    <plugin name="gazebo_ros2_control" filename="libgazebo_ros2_control.so">
+      <parameters>$(find my_car_simulation)/config/car_controller.yaml</parameters>
+      <robot_param>robot_description</robot_param>
+      <robot_param_node>robot_state_publisher</robot_param_node>
+    </plugin>
+  </gazebo>
+
+  <!-- ================= PLUGIN CAMERA CHO GAZEBO ================= -->
+  <gazebo reference="camera_link">
+    <material>Gazebo/Red</material>
+    <sensor name="camera" type="camera">
+      <pose>0 0 0 0 0 0</pose>
+      <visualize>true</visualize>
+      <update_rate>30</update_rate>
+      <camera>
+        <horizontal_fov>1.089</horizontal_fov>
+        <image>
+          <width>640</width>
+          <height>480</height>
+          <format>R8G8B8</format>
+        </image>
+        <clip><near>0.05</near><far>8.0</far></clip>
+      </camera>
+      <plugin name="camera_controller" filename="libgazebo_ros_camera.so">
+        <frame_name>camera_link_optical</frame_name>
+      </plugin>
+    </sensor>
+  </gazebo>
+ <!-- ================= PLUGIN IMU CHO GAZEBO ================= -->
+  <gazebo reference="imu_link">
+    <gravity>true</gravity>
+    <sensor name="imu_sensor" type="imu">
+      <always_on>true</always_on>
+      <update_rate>100</update_rate>
+      <visualize>true</visualize>
+      <topic>__default_topic__</topic>
+      <plugin name="imu_plugin" filename="libgazebo_ros_imu_sensor.so">
+        <ros><remapping>~/out:=imu/data</remapping></ros>
+        <frame_name>imu_link</frame_name>
+      </plugin>
+    </sensor>
+  </gazebo>
+</robot>

@@ -1,0 +1,20 @@
+material RaceTrack/Texture
+{
+  technique
+  {
+    pass
+    {
+      ambient 1.0 1.0 1.0 1.0
+      diffuse 1.0 1.0 1.0 1.0
+      specular 0.1 0.1 0.1 1.0 12.0
+
+      texture_unit
+      {
+        texture track_texture.png
+        filtering anisotropic
+        max_anisotropy 16
+        scale 1 1
+      }
+    }
+  }
+}

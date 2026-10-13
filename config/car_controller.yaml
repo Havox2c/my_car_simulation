@@ -1,0 +1,77 @@
+gazebo_ros2_control:
+  ros__parameters:
+    pid_gains:
+      left_steering_joint:
+        p: 100.0
+        i: 0.01
+        d: 5.0
+      right_steering_joint:
+        p: 100.0
+        i: 0.01
+        d: 5.0
+      left_rear_wheel_joint:
+        p: 10.0
+        i: 0.1
+        d: 0.0
+      right_rear_wheel_joint:
+        p: 10.0
+        i: 0.1
+        d: 0.0
+
+controller_manager:
+  ros__parameters:
+    update_rate: 50
+
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+
+    ackermann_steering_controller:
+      type: ackermann_steering_controller/AckermannSteeringController
+
+ackermann_steering_controller:
+  ros__parameters:
+    rear_wheels_names:
+      - right_rear_wheel_joint
+      - left_rear_wheel_joint
+
+    front_wheels_names:
+      - right_steering_joint
+      - left_steering_joint
+
+    wheelbase: 0.3
+    front_wheel_track: 0.26
+    rear_wheel_track: 0.26
+    front_wheels_radius: 0.06
+    rear_wheels_radius: 0.06
+
+    steer_pos_max: 0.55
+    steer_pos_min: -0.55
+
+    linear:
+      x:
+        has_velocity_limits: true
+        max_velocity: 2.0
+        min_velocity: -1.0
+        has_acceleration_limits: true
+        max_acceleration: 1.5
+        has_deceleration_limits: true
+        max_deceleration: -2.0
+        has_jerk_limits: true
+        max_jerk: 5.0
+
+    angular:
+      z:
+        has_velocity_limits: true
+        max_velocity: 1.5
+        has_acceleration_limits: true
+        max_acceleration: 2.0
+        has_jerk_limits: true
+        max_jerk: 5.0
+
+    base_frame_id: base_link
+    odom_frame_id: odom
+    enable_odom_tf: true
+    publish_rate: 50.0
+    open_loop: false
+ 
+

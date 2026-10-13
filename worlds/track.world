@@ -1,0 +1,34 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <world name="default">
+    <!-- Nguồn sáng mặt trời -->
+    <include>
+      <uri>model://sun</uri>
+    </include>
+
+    <!-- Mặt phẳng nền (ground plane) để tránh robot rơi -->
+    <include>
+      <uri>model://ground_plane</uri>
+    </include>
+
+    <!-- Sa hình đường đua 20m x 4m -->
+    <include>
+      <uri>model://race_track</uri>
+      <pose>10 0 0.001 0 0 0</pose> <!-- Đặt tâm sa hình tại x=10m, nâng 1mm để nổi trên ground_plane -->
+    </include>
+
+    <!-- Góc nhìn Camera mặc định - quan sát toàn bộ đường từ trên cao -->
+    <gui fullscreen='0'>
+      <camera name='user_camera'>
+        <pose>10 -8 12 0 0.8 1.57</pose> <!-- Nhìn chéo từ phía trên -->
+      </camera>
+    </gui>
+
+    <!-- Cấu hình vật lý -->
+    <physics type="ode">
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1</real_time_factor>
+      <real_time_update_rate>1000</real_time_update_rate>
+    </physics>
+  </world>
+</sdf>
