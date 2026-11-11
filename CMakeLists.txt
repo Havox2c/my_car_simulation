@@ -24,4 +24,13 @@ endif()
 install(DIRECTORY launch urdf config models worlds
   DESTINATION share/${PROJECT_NAME}
 )
+
+install(
+  PROGRAMS
+    scripts/sensor_monitor_node.py
+    scripts/nmpc_node.py
+    scripts/race_commander_node.py
+    scripts/stop_car.py
+  DESTINATION lib/${PROJECT_NAME}
+)
 ament_package()

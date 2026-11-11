@@ -10,13 +10,13 @@ gazebo_ros2_control:
         i: 0.01
         d: 5.0
       left_rear_wheel_joint:
-        p: 10.0
+        p: 5.0
         i: 0.1
-        d: 0.0
+        d: 0.1
       right_rear_wheel_joint:
-        p: 10.0
+        p: 5.0
         i: 0.1
-        d: 0.0
+        d: 0.1
 
 controller_manager:
   ros__parameters:
@@ -30,22 +30,24 @@ controller_manager:
 
 ackermann_steering_controller:
   ros__parameters:
+    # Các khớp bánh dẫn động (Traction / Drive) - Khớp bánh sau
     rear_wheels_names:
       - right_rear_wheel_joint
       - left_rear_wheel_joint
 
+    # Các khớp bẻ lái (Steering) - Khớp cổ lái trước
     front_wheels_names:
       - right_steering_joint
       - left_steering_joint
+
+    front_steering: true
+    reference_timeout: 2.0
 
     wheelbase: 0.3
     front_wheel_track: 0.26
     rear_wheel_track: 0.26
     front_wheels_radius: 0.06
     rear_wheels_radius: 0.06
-
-    steer_pos_max: 0.55
-    steer_pos_min: -0.55
 
     linear:
       x:
@@ -55,7 +57,7 @@ ackermann_steering_controller:
         has_acceleration_limits: true
         max_acceleration: 1.5
         has_deceleration_limits: true
-        max_deceleration: -2.0
+        max_deceleration: 2.0
         has_jerk_limits: true
         max_jerk: 5.0
 
@@ -73,5 +75,3 @@ ackermann_steering_controller:
     enable_odom_tf: true
     publish_rate: 50.0
     open_loop: false
- 
-
